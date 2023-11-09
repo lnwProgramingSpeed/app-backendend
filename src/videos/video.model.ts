@@ -31,6 +31,9 @@ export class Video {
   date: Date;
   
   @Prop ({ required: true })
+  buyTime: number;
+
+  @Prop ({ required: true })
   owner_id: string;
 }
 

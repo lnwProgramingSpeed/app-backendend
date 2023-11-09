@@ -9,6 +9,7 @@ import {
   Query,
   NotFoundException,
   InternalServerErrorException,
+  Put,
 } from '@nestjs/common';
 import { VideosService } from './videos.service';
 
@@ -79,7 +80,7 @@ export class VideosController {
   }
 
   @Get('/:id')
-  async getVideoById(@Param('id') id: string){
+  async getVideoById(@Param('id') id: string) {
     const videos = await this.videosService.getVideoById(id);
     return videos;
   }
@@ -116,6 +117,46 @@ export class VideosController {
       return deletedVideo;
     } catch (error) {
       throw new InternalServerErrorException('Error deleting video', error);
+    }
+  }
+
+  @Put('/buy/:id')
+  async buyVideo(@Param('id') id: string) {
+    try {
+      const updatedVideo = await this.videosService.buy(id);
+      if (updatedVideo) {
+        return { message: 'Video purchase successful', video: updatedVideo };
+      } else {
+        return { message: 'Video not found', video: null };
+      }
+    } catch (error) {
+      console.error('Error buying video:', error);
+      return { message: 'Error buying video', error };
+    }
+  }
+  @Patch(':id')
+  async editVideo(
+    @Param('id') id: string,
+    @Body('title') title: string,
+    @Body('university') university: string,
+    @Body('year') year: string,
+    @Body('term') term: string,
+    @Body('price') price: number,
+    @Body('description') description?: string,
+  ) {
+    try {
+      const updatedVideo = await this.videosService.editVideo(
+        id,
+        title,
+        university,
+        year,
+        term,
+        price,
+        description,
+      );
+      return updatedVideo;
+    } catch (error) {
+      throw new InternalServerErrorException('Error updating video', error);
     }
   }
 }

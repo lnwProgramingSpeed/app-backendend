@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Video, VideoDocument } from './video.model';
@@ -19,6 +23,7 @@ export class VideosService {
     description?: string,
   ) {
     const currentDate = new Date();
+    const buyTime: number = 0;
     const newVideo = new this.videoModel({
       title,
       description,
@@ -29,6 +34,7 @@ export class VideosService {
       term,
       price,
       date: currentDate,
+      buyTime: buyTime,
       owner_id,
     });
     const result = await newVideo.save();
@@ -48,6 +54,7 @@ export class VideosService {
       term: video.term,
       price: video.price,
       owner_id: video.owner_id,
+      buyTime: video.buyTime,
       date: video.date,
     }));
   }
@@ -67,6 +74,7 @@ export class VideosService {
         term: video.term,
         price: video.price,
         date: video.date,
+        buyTime: video.buyTime,
         owner_id: video.owner_id,
       };
     } catch (error) {
@@ -191,5 +199,52 @@ export class VideosService {
     } catch (error) {
       throw new InternalServerErrorException('Error deleting video', error);
     }
+  }
+
+  async buy(id: string) {
+    try {
+      const video = await this.videoModel.findById(id);
+      if (video) {
+        video.buyTime += 1;
+
+        await video.save();
+
+        return video;
+      } else {
+        console.error('Video not found');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error updating buyTime:', error);
+      throw error;
+    }
+  }
+  async editVideo(
+    id: string,
+    title: string,
+    university: string,
+    year: string,
+    term: string,
+    price: number,
+    description: string,
+  ) {
+    const updateData: Partial<Video> = {};
+
+    if (title) updateData.title = title;
+    if (university) updateData.university = university;
+    if (year) updateData.year = year;
+    if (term) updateData.term = term;
+    if (price) updateData.price = price;
+    if (description) updateData.description = description;
+
+    const updatedVideo = await this.videoModel
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .exec();
+
+    if (!updatedVideo) {
+      throw new NotFoundException(`Video with ID ${id} not found`);
+    }
+
+    return updatedVideo;
   }
 }
